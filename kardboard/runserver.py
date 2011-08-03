@@ -1,5 +1,6 @@
 import sys
 from kardboard import app
+import logging
 
 
 def profile_run():
@@ -13,6 +14,7 @@ def profile_run():
 
 
 def run():
+    app.logger.setLevel(logging.DEBUG)
     app.run(debug=True)
 
 if __name__ == "__main__":

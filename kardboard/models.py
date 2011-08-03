@@ -1,5 +1,6 @@
 import datetime
 import math
+import importlib
 
 from dateutil.relativedelta import relativedelta
 
@@ -94,6 +95,7 @@ class Kard(app.db.Document):
     start_date = date at which the card was considered in progress
     done_date = date the card was considered done
     """
+    _ticket_system = None
 
     key = app.db.StringField(required=True, unique=True)
     title = app.db.StringField()
@@ -104,9 +106,12 @@ class Kard(app.db.Document):
     _lead_time = app.db.IntField(db_field="lead_time")
     category = app.db.StringField(required=True, default="Uncategorized")
     state = app.db.StringField(required=True, default="Unknown")
+    _ticket_system_updated_at = app.db.DateTimeField()
+    _ticket_system_data = app.db.DictField()
 
     meta = {
         'queryset_class': KardQuerySet,
+        'collection': 'kard',
     }
 
     EXPORT_FIELDNAMES = (
@@ -251,3 +256,39 @@ class Kard(app.db.Document):
             done = done.strftime("%m/%d/%Y")
 
         return u"%s -- %s | %s | %s" % (self.key, backlog, start, done)
+
+    @property
+    def ticket_system(self):
+        if self._ticket_system:
+            return self._ticket_system
+
+        helper_setting = app.config['TICKET_HELPER']
+        modname = '.'.join(helper_setting.split('.')[:-1])
+        klassnam = helper_setting.split('.')[-1]
+        mod = importlib.import_module(modname)
+        klass = getattr(mod, klassnam)
+
+        helper = klass(app.config, self)
+        self._ticket_system = helper
+        return helper
+
+    @property
+    def ticket_system_data(self):
+        now = datetime.datetime.now()
+        if not self._ticket_system_data:
+            if not app.config.get('TESTING'):
+                app.logger.warning("Card %s has no ticket_system_data!" % self.key)
+            self.ticket_system.update()
+            return {}
+        elif self._ticket_system_data and self._ticket_system_updated_at:
+            #We've updated it at some point, let's see if it's old
+            #enough to warrant an update
+            threshold = app.config.get('TICKET_UPDATE_THRESHOLD', 60 * 60)
+            diff = now - self._ticket_system_updated_at
+            if diff.seconds >= threshold:
+                app.logger.info(
+                    "Card %s info is older than an %s seconds" % (self.key,
+                        threshold))
+                self.ticket_system.update()  # Schedules an update job
+
+        return self._ticket_system_data

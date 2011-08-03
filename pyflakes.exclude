@@ -1,3 +1,0 @@
-kardboard/util.py:*: 'translitcodec' imported but unused
-kardboard/__init__.py:*: 'kardboard' imported but unused
-kardboard/tickethelpers/__init__.py:*: 'logging' imported but unused

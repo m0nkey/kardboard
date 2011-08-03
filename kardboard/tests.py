@@ -2,11 +2,12 @@ import datetime
 import random
 import os
 import copy
+import logging
 
 import unittest2
 from mock import patch
+from dateutil.relativedelta import relativedelta
 
-from kardboard.mocks import MockJIRAHelper
 from kardboard.util import slugify
 
 
@@ -21,15 +22,32 @@ class KardboardTestCase(unittest2.TestCase):
         kardboard.app.config['MONGODB_DB'] = 'kardboard-unittest'
         kardboard.app.config['DEBUG'] = True
         kardboard.app.config['TESTING'] = True
+        kardboard.app.config['CELERY_ALWAYS_EAGER'] = True
         kardboard.app.db = MongoEngine(kardboard.app)
 
         self._flush_db()
 
         self.config = kardboard.app.config
         self.app = kardboard.app.test_client()
+        self.flask_app = kardboard.app
 
         self.used_keys = []
+        self._setup_logging()
         super(KardboardTestCase, self).setUp()
+
+    def tearDown(self):
+        if hasattr(self.config, 'TICKET_HELPER'):
+            del self.config['TICKET_HELPER']
+
+        self.flask_app.logger.handlers = self._old_logging_handlers
+
+    def _setup_logging(self):
+        self._old_logging_handlers = self.flask_app.logger.handlers
+        del self.flask_app.logger.handlers[:]
+        new_handler = logging.StreamHandler()
+        new_handler.setLevel(logging.CRITICAL)
+        new_handler.setFormatter(logging.Formatter(self.flask_app.debug_log_format))
+        self.flask_app.logger.addHandler(new_handler)
 
     def _flush_db(self):
         from mongoengine.connection import _get_db
@@ -260,7 +278,7 @@ class KardTests(KardboardTestCase):
     def test_completed_in_month(self):
         klass = self._get_target_class()
         self.assertEqual(1,
-            klass.objects.done_in_month(year=2011, month=6).count())
+            klass.objects.done_in_month(year=2011, month=6, day=30).count())
 
     def test_moving_cycle_time(self):
         klass = self._get_target_class()
@@ -278,6 +296,80 @@ class KardTests(KardboardTestCase):
             year=2011, month=6, day=15)
 
         self.assertEqual(expected, actual.count())
+
+    def test_ticket_system(self):
+        from kardboard.tickethelpers import TicketHelper
+        self.config['TICKET_HELPER'] = \
+            'kardboard.tickethelpers.TestTicketHelper'
+
+        k = self._make_one()
+        h = k.ticket_system
+
+        self.assertEqual(True, isinstance(h, TicketHelper))
+        self.assert_(k.key in h.get_ticket_url())
+
+    def test_ticket_system_update(self):
+        k = self._make_one()
+        self.assert_(k._ticket_system_data == {})
+        self.assert_(k._ticket_system_updated_at is None)
+
+        k.ticket_system.update()
+        now = datetime.datetime.now()
+        updated_at = k._ticket_system_updated_at
+        diff = now - updated_at
+        self.assert_(diff.seconds <= 1)
+
+
+class JIRAHelperTests(KardboardTestCase):
+    def setUp(self):
+        super(JIRAHelperTests, self).setUp()
+        from kardboard.mocks import MockJIRAClient, MockJIRAIssue
+        self.card = self.make_card()
+        self.config['JIRA_WSDL'] = 'http://jira.example.com'
+        self.config['JIRA_CREDENTIALS'] = ('foo', 'bar')
+        self.config['TICKET_HELPER'] = 'kardboard.tickethelpers.JIRAHelper'
+        self.ticket = MockJIRAIssue()
+        self.sudspatch = patch('suds.client.Client', MockJIRAClient)
+        self.sudspatch.start()
+
+    def tearDown(self):
+        super(JIRAHelperTests, self).tearDown()
+        self.sudspatch.stop()
+        del self.config['JIRA_WSDL']
+
+    def _get_target_class(self):
+        from kardboard.tickethelpers import JIRAHelper
+        return JIRAHelper
+
+    def _make_one(self):
+        klass = self._get_target_class()
+        return klass(self.config, self.card)
+
+    def test_update(self):
+        k = self.card
+        k.save()
+        self.assert_(k._ticket_system_data == {})
+        self.assert_(k._ticket_system_updated_at is None)
+
+        k.ticket_system.update()
+        k.reload()
+        now = datetime.datetime.now()
+        updated_at = k._ticket_system_updated_at
+        diff = now - updated_at
+        self.assert_(diff.seconds <= 1)
+
+    def test_get_title(self):
+        h = self._make_one()
+        expected = self.ticket.summary
+        actual = h.get_title()
+        self.assertEqual(expected, actual)
+
+    def test_get_ticket_url(self):
+        h = self._make_one()
+        expected = "%s/browse/%s" % (self.config['JIRA_WSDL'],
+            self.card.key)
+        actual = h.get_ticket_url()
+        self.assertEqual(actual, expected)
 
 
 class KardTimeMachineTests(KardboardTestCase):
@@ -627,13 +719,11 @@ class CardCRUDTests(KardboardTestCase):
             'category': u'Bug',
             'state': u'Todo',
         }
-
-        self.jirapatch = patch('kardboard.tickethelpers.JIRAHelper',
-            new=MockJIRAHelper)
-        self.jirapatch.start()
+        self.config['TICKET_HELPER'] = \
+            'kardboard.tickethelpers.TestTicketHelper'
 
     def tearDown(self):
-        self.jirapatch.stop()
+        super(CardCRUDTests, self).tearDown()
 
     def _get_target_url(self):
         return '/card/add/'
@@ -677,9 +767,11 @@ class CardCRUDTests(KardboardTestCase):
         self.assertEqual(302, res.status_code)
         self.assertEqual(1, klass.objects.count())
 
+        # This should work because we mocked TestHelper
+        # in setUp
         k = klass.objects.get(key=self.required_data['key'])
         self.assert_(k.id)
-        self.assertEqual(k.title, self.required_data['title'])
+        self.assertEqual(k.title, "Dummy Title from Dummy Ticket System")
 
     def test_add_duplicate_card(self):
         klass = self._get_target_class()
@@ -786,16 +878,24 @@ class ThroughputChartTests(KardboardTestCase):
 
 class CycleTimeHistoryTests(KardboardTestCase):
 
-    def _get_target_url(self, months=None):
+    def _get_target_url(self, months=None, date=None):
         base_url = '/chart/cycle/'
         if months:
-            base_url = base_url = "%s/" % months
+            base_url = base_url + "%s/" % months
+        if date:
+            base_url = base_url + "from/%s/%s/%s/" % \
+                (date.year, date.month, date.day)
         return base_url
 
     def test_cycle(self):
-        target_url = self._get_target_url()
+        date = datetime.datetime(year=2011, month=7, day=1)
+        end_date = date - relativedelta(months=6)
+        target_url = self._get_target_url(date=date)
         res = self.app.get(target_url)
         self.assertEqual(200, res.status_code)
+
+        expected = end_date.strftime("%m/%d/%Y")
+        self.assertIn(expected, res.data)
 
 
 class CumulativeFlowTests(KardboardTestCase):
