@@ -1,0 +1,10 @@
+body{
+    background-color: #000;
+}
+h1 {
+    background-color: #ff9900;
+    -webkit-border-radius: 50px;
+    -moz-border-radius: 50px;
+    border-radius: 50px;
+    width: 80%;
+}
