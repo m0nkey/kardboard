@@ -166,3 +166,10 @@ div.card_detail .content {
 .card_detail .content a {
     color: #92CC47;
 }
+
+.themer {
+    position: absolute;
+    top: 0pt;
+    left: 0pt;
+    margin: 4px;
+}

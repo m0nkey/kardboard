@@ -16,19 +16,17 @@
         <script type="text/javascript" src="{{ url_for('static', filename='jquery.themer.js') }}"></script>
     </head>
     <body>
-        
-        <div style="position: absolute; top: 0; left: 0; margin: 4px;">
-            <form>
-                <select id="styleSwitcher" onchange="this.form.submit()">
-                    <option rel="javascript:void(0);" selected="selected">Theme it!</option>
-                    <option rel="javascript:void(0);">--------</option>
-                    <option rel="{{ url_for('static', filename='style.css') }}">Default</option>
-                    <option rel="{{ url_for('static', filename='theme.metal.css') }}">Metal</option>
-                    <option rel="{{ url_for('static', filename='theme.pony.css') }}">Pony</option>
-                    <option rel="{{ url_for('static', filename='theme.lcars.css') }}">LCARS</option>
-                </select>
-            </form>
-        </div>
+
+        <form class="themer">
+            <select id="styleSwitcher" onchange="this.form.submit()">
+                <option rel="javascript:void(0);" selected="selected">Theme it!</option>
+                <option rel="javascript:void(0);">--------</option>
+                <option rel="{{ url_for('static', filename='style.css') }}">Default</option>
+                <option rel="{{ url_for('static', filename='theme.metal.css') }}">Metal</option>
+                <option rel="{{ url_for('static', filename='theme.pony.css') }}">Pony</option>
+                <option rel="{{ url_for('static', filename='theme.lcars.css') }}">LCARS</option>
+            </select>
+        </form>
         
         <h1>{% block title %}{{ title }}{% endblock %}</h1>
 
