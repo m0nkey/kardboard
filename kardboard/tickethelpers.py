@@ -26,6 +26,21 @@ class TicketHelper(object):
         raise NotImplemented
 
 
+class NullHelper(TicketHelper):
+    def get_title(self, key=None):
+        return ''
+
+    def get_ticket_url(self, key=None):
+        return ''
+
+    def update(self, sync=False):
+        super(NullHelper, self).update(sync)
+        return None
+
+    def actually_update(self):
+        return None
+
+
 class TestTicketHelper(TicketHelper):
     def get_title(self, key=None):
         title = ''
@@ -46,19 +61,6 @@ class TestTicketHelper(TicketHelper):
         }
         self.card._ticket_system_data = test_data
 
-
-class JIRAConnection(object):
-    __shared_state = {}
-
-    def __init__(self, client):
-        self.__dict__ = self.__shared_state
-        self.client = client
-
-    def connect(self, username, password):
-        self.auth = self.client.service.login(username, password)
-        return self.auth
-
-
 class JIRAHelper(TicketHelper):
     def __init__(self, config, kard):
         super(JIRAHelper, self).__init__(config, kard)
@@ -66,6 +68,7 @@ class JIRAHelper(TicketHelper):
         self.logger = app.logger
         self.testing = app.config.get('TESTING')
         self.issues = {}
+        self._service = None
 
         try:
             self.wsdl_url = self.app_config['JIRA_WSDL']
@@ -81,28 +84,33 @@ class JIRAHelper(TicketHelper):
             raise ImproperlyConfigured(
                 "JIRA_CREDENTIALS should be a two-item tuple (user, pass)")
 
-        from suds.client import Client
-        self.Client = Client
-
     @property
     def cache_prefix(self):
         return "jira_%s" % self.wsdl_url
 
+    @property
+    def service(self):
+        if self._service is None:
+            from suds.client import Client
+            self.Client = Client
+            self.connect()
+        return self._service
+
+
     def connect(self):
+        auth_key = "offline_auth_%s" % self.cache_prefix
+        auth = cache.get(auth_key)
+
         client = self.Client(self.wsdl_url)
-        jc = JIRAConnection(client)  # Avoid double-login
-        if hasattr(jc, 'auth'):
-            auth = jc.auth
-        else:
-            auth = jc.connect(self.username, self.password)
+        if not auth:
+            self.logger.warn("Cache miss for %s" % auth_key)
+            auth = client.service.login(self.username, self.password)
+            cache.set(auth_key, auth, 60 * 60)  # Cache for an hour
 
         self.auth = auth
-        self.service = client.service
+        self._service = client.service
 
     def get_issue(self, key=None):
-        if not hasattr(self, 'service'):
-            self.connect()
-
         key = key or self.card.key
         if self.issues.get(key, None):
             return self.issues.get(key)
@@ -174,8 +182,6 @@ class JIRAHelper(TicketHelper):
             if sync:
                 self.actually_update()
             else:
-                self.logger.info(
-                    "Scheduling update job for %s" % self.card.key)
                 update_ticket.apply_async((self.card.id,))
         else:
             # first fetch
