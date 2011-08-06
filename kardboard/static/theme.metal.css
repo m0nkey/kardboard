@@ -1,3 +1,33 @@
 body {
-    background-color: #333;
+    background: url("metal-pony-small.gif") no-repeat scroll top left #666;
+}
+h1,h2,h3,h4,h5,h6,caption {
+    letter-spacing: 0.08em;
+    font-weight: 500;
+}
+p.nav a {
+    color: #999;
+    letter-spacing: 0.05em;
+}
+h1 {
+    color: #222;
+    font-weight: 500;
+}
+caption {
+    color: #222;
+}
+table th {
+    background-color: #999;
+}
+table#card_form {
+    background: transparent;
+}
+label.required {
+    color: #fff;
+}
+div.metric {
+    border-color: #999;
+}
+div.metric h2 {
+    background-color: #999;
 }

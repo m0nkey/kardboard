@@ -1,21 +1,26 @@
 body {
     background-color: #000;
+    text-transform: uppercase;
 }
-h1,h2,h3,h4,h5,h6,caption{
-    letter-spacing: 0.1em;
+h1,h2,h3,h4,h5,h6,caption {
+    letter-spacing: 0.08em;
     font-weight: 500;
+}
+a {
+    color: #8069AF;
 }
 p.nav a {
     color: #FF9933;
+    letter-spacing: 0.05em;
+}
+p.updated {
+    font-size: 14px;
 }
 h1 {
-    -webkit-border-top-left-radius: 50px;
-    -webkit-border-bottom-left-radius: 50px;
-    -moz-border-radius-topleft: 50px;
-    -moz-border-radius-bottomleft: 50px;
-    border-top-left-radius: 50px;
-    border-bottom-left-radius: 50px;
-    background-color: #FFCC99;
+    border-radius: 50px;
+    -moz-border-radius: 50px;
+    -webkit-border-radius: 50px;
+    background-color: #FF9C00;
     color: #000;
     font-weight: 500;
     margin-left: 10%;
@@ -33,17 +38,53 @@ caption {
     border-top-right-radius: 20px;
     border-bottom-right-radius: 20px;
     color: #000;
-    margin-bottom: 10px;
-    padding-left: 15px;
-    width: 20%;
+    margin-bottom: 15px;
+    padding: 10px;
+    width: 15%;
+}
+label.required,td.form_label label {
+    color: #fff;
+}
+div.metric {
+    border: 5px solid #FF9C00;
+    background-color: #FFCC99;
+    -webkit-border-radius: 20px;
+    -moz-border-radius: 20px;
+    border-radius: 20px;
+}
+div.metric h2 {
+    background-color: #FF9C00;
+    color: #000;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    font-size: 16px;
+    -webkit-border-top-right-radius: 15px;
+    -moz-border-radius-topright: 15px;
+    border-top-right-radius: 15px;    
+    -webkit-border-top-left-radius: 15px;
+    -moz-border-radius-topleft: 15px;
+    border-top-left-radius: 15px;
 }
 table {
     background: #000;
-    color: #000;
+    display: table;
+    margin: 0 10% 30px;
 }
 table th {
-    background-color: #AE697D;
-    border-radius: 20px;
+    background-color: #FFCC99;
+    -webkit-border-radius: 20px;
     -moz-border-radius: 20px;
+    border-radius: 20px;
     padding-left: 15px;
+}
+table td, table th {
+    padding: 10px;
+}
+table tr.even {
+    background-color: #CF9F60;
+    color: #000;
+}
+table tr.odd {
+    background-color: #000;
+    color: #fff;
 }

@@ -1,3 +1,28 @@
 body {
-    background-color: #ccbbff;
+    background: url("pony.gif") no-repeat scroll top right #FFD0D6;
+    color: #D997B5;
+}
+h1,h2,h3,h4,h5,h6,caption {
+    font-weight: 500;
+    color: #52056B;
+    letter-spacing: 0.08em;
+}
+a,p.nav a {
+    color: #FF818D;
+    letter-spacing: 0.05em;
+}
+table th {
+    background-color: #FFC1C9;
+}
+table#card_form {
+    background: transparent;
+}
+label.required,td.form_label label {
+    color: #52056B;
+}
+div.metric {
+    border-color: #FFC1C9;
+}
+div.metric h2 {
+    background-color: #FFC1C9;
 }

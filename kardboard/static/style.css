@@ -5,26 +5,24 @@ body {
     text-align: center;
 }
 
+h1,h2,caption {
+    font-family: "HelveticaNeue-CondensedBold", "Helvetica Neue Condensed Bold", "Impact", Helvetica, sans-serif;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
 h1 {
     text-align: center;
-    font-family: "HelveticaNeue-CondensedBold", "Helvetica Neue Condensed Bold", "Impact", Helvetica, sans-serif;
-    font-weight: bold;
-    text-transform: uppercase;
     font-size: 40px;
 }
 
 h2 {
-    font-family: "HelveticaNeue-CondensedBold", "Helvetica Neue Condensed Bold", "Impact", Helvetica, sans-serif;
-    font-weight: bold;
-    text-transform: uppercase;
     font-size: 30px;
     text-align: center;
 }
 
 caption {
-    font-family: "HelveticaNeue-CondensedBold", "Helvetica Neue Condensed Bold", "Impact", Helvetica, sans-serif;
-    font-weight: bold;
-    text-transform: uppercase;
     font-size: 20px;
     text-align: left;
     color: #eee;
@@ -34,6 +32,8 @@ div.metric {
     width: 250px;
     border: 1px #92CC47 solid;
     margin: 15px;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
     border-radius: 8px;
     background-color: #234F32;
     background-color: #E5F6F6;
@@ -48,6 +48,10 @@ div.metric h2 {
     color: black;
     margin: 0px;
     padding: 6px;
+    -webkit-border-top-left-radius: 6px;
+    -webkit-border-top-right-radius: 6px;
+    -moz-border-radius-topleft: 6px;
+    -moz-border-radius-topright: 6px;
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
 }
@@ -88,6 +92,7 @@ p.nav a:hover {
 
 #wip_data {
     text-align: center;
+    margin-top: 20px;
 }
 
 table {
@@ -104,7 +109,7 @@ table tr.even {
     background-color: #fff;
 }
 
-table td, table th  {
+table td, table th {
     margin: 0;
     padding: 3px;
 }
@@ -144,6 +149,14 @@ form table td.form_label {
     font-size: .8em;
 }
 
+form table td.form_field {
+    width: 35%;
+}
+
+table#card_form {
+    margin-top: 20px;
+}
+
 label.required {
     font-weight: bold;
     color: #000;
@@ -172,4 +185,8 @@ div.card_detail .content {
     top: 0pt;
     left: 0pt;
     margin: 4px;
+}
+
+form.search {
+    margin-bottom: 20px;
 }
