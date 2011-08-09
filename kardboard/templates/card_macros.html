@@ -1,19 +1,27 @@
-{% macro card_table(card_collection, caption="", show_done=False, show_state=True) -%}
+{% macro card_table(card_collection, caption="", show_done=False, show_state=True, show_priority=False, show_cycle=True) -%}
 <table>
     <caption>{{ caption }}</caption>
     <tr>
         <th class="key_col">Ticket</th>
+        <th>&nbsp;</th>
         <th>Title</th>
 
         <th>Assigned</th>
 
+        {% if show_cycle %}
         <th>Cycle time</th>
+        {% endif %}
+
         {% if show_done %}
         <th class="date_col">Done</th>
         {% endif %}
 
         {% if show_state %}
         <th>State</th>
+        {% endif %}
+
+        {% if show_priority %}
+        <th>Ordering</th>
         {% endif %}
 
     </tr>
@@ -37,8 +45,14 @@
         </td>
 
         <td>
+            <a href="{{ url_for('card_edit', key=card.key) }}">Edit</a>
+        </td>
+
+        <td>
             <a href="{{ url_for('card', key=card.key) }}">{{ card.title }}</a>
         </td>
+
+
 
 
         <td>
@@ -47,6 +61,7 @@
           {% endif %}
         </td>
 
+        {% if show_cycle %}
         <td>
             {% if card.cycle_time %}
                 {{ card.cycle_time }}
@@ -54,6 +69,7 @@
                 {{ card.current_cycle_time() }}
             {% endif %}
         </td>
+        {% endif %}
 
 
         {% if show_done %}
@@ -66,6 +82,12 @@
             {% if card.state != 'Unknown' %}
                 <a href="{{ url_for('state', state_slug=card.state|slugify) }}">{{ card.state }}</a>
             {% endif %}
+        </td>
+        {% endif %}
+
+        {% if show_priority %}
+        <td>
+            {{ card.priority }}
         </td>
         {% endif %}
 

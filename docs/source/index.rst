@@ -6,12 +6,9 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
+    concepts
+    installing
     developing
+    api
 
-Indices and tables
-==================
-
-* :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
-
