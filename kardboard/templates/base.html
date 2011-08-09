@@ -18,7 +18,7 @@
     <body>
 
         <form class="themer">
-            <select id="styleSwitcher" onchange="this.form.submit()">
+            <select id="styleSwitcher" onchange="this.form.submit();">
                 <option rel="javascript:void(0);" selected="selected">Theme it!</option>
                 <option rel="javascript:void(0);">--------</option>
                 <option rel="{{ url_for('static', filename='style.css') }}">Default</option>

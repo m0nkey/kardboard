@@ -1,5 +1,5 @@
 body {
-    background: url("metal-pony-small.gif") no-repeat scroll top left #666;
+    background: url("metal-pony.gif") no-repeat scroll top left #666;
 }
 h1,h2,h3,h4,h5,h6,caption {
     letter-spacing: 0.08em;
@@ -30,4 +30,5 @@ div.metric {
 }
 div.metric h2 {
     background-color: #999;
+    font-size: 16px;
 }
